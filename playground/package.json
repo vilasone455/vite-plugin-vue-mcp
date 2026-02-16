@@ -2,7 +2,7 @@
   "name": "playground",
   "type": "module",
   "private": true,
-  "author": "Arlo <webfansplz@gmail.com>",
+  "author": "vilasone455 <vilasone455@example.com>",
   "scripts": {
     "dev": "DEBUG=vite:mcp:server vite"
   },
