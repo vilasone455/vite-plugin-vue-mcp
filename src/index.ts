@@ -19,6 +19,7 @@ function getVueMcpPath(): string {
 const vueMcpResourceSymbol = '?__vue-mcp-resource'
 
 export function VueMcp(options: VueMcpOptions = {}): Plugin {
+  console.log('[VueMcp] Initializing plugin with options:', options)
   const {
     mcpPath = '/__mcp',
     updateCursorMcpJson = true,
@@ -42,7 +43,9 @@ export function VueMcp(options: VueMcpOptions = {}): Plugin {
     enforce: 'pre',
     apply: 'serve',
     async configureServer(vite) {
+      console.log('[VueMcp] Configuring server...')
       const rpc = createServerRpc(ctx)
+      console.log('[VueMcp] RPC server created')
 
       const rpcServer = createRPCServer<RpcFunctions, any>(
         'vite-plugin-vue-mcp',
@@ -54,17 +57,24 @@ export function VueMcp(options: VueMcpOptions = {}): Plugin {
       )
       ctx.rpcServer = rpcServer
       ctx.rpc = rpc
+      console.log('[VueMcp] RPC server assigned to context')
 
       let mcp = await mcpServer(vite, ctx)
+      console.log('[VueMcp] MCP server created')
       mcp = await options.mcpServerSetup?.(mcp, vite) || mcp
+      console.log('[VueMcp] MCP server setup complete')
       await setupRoutes(mcpPath, mcp, vite)
+      console.log('[VueMcp] Routes setup complete')
 
       const port = vite.config.server.port || 5173
       const root = searchForWorkspaceRoot(vite.config.root)
+      console.log('[VueMcp] Server port:', port, 'Root:', root)
 
       const sseUrl = `http://${options.host || 'localhost'}:${port}${mcpPath}/sse`
+      console.log('[VueMcp] SSE URL:', sseUrl)
 
       if (cursorMcpOptions.enabled) {
+        console.log('[VueMcp] Updating Cursor MCP JSON...')
         if (existsSync(join(root, '.cursor'))) {
           const mcp = existsSync(join(root, '.cursor/mcp.json'))
             ? JSON.parse(await fs.readFile(join(root, '.cursor/mcp.json'), 'utf-8') || '{}')
@@ -72,6 +82,9 @@ export function VueMcp(options: VueMcpOptions = {}): Plugin {
           mcp.mcpServers ||= {}
           mcp.mcpServers[cursorMcpOptions.serverName || 'vue-mcp'] = { url: sseUrl }
           await fs.writeFile(join(root, '.cursor/mcp.json'), `${JSON.stringify(mcp, null, 2)}\n`)
+          console.log('[VueMcp] Cursor MCP JSON updated')
+        } else {
+          console.log('[VueMcp] .cursor folder does not exist, skipping Cursor MCP JSON update')
         }
       }
 
@@ -92,6 +105,7 @@ export function VueMcp(options: VueMcpOptions = {}): Plugin {
       }
     },
     configResolved(resolvedConfig) {
+      console.log('[VueMcp] Config resolved:', resolvedConfig.root)
       config = resolvedConfig
     },
     transform(code, id, _options) {
@@ -105,6 +119,7 @@ export function VueMcp(options: VueMcpOptions = {}): Plugin {
         && (
           (typeof appendTo === 'string' && filename.endsWith(appendTo))
           || (appendTo instanceof RegExp && appendTo.test(filename)))) {
+        console.log('[VueMcp] Transforming file (appendTo):', filename)
         code = `import 'virtual:vue-mcp-path:overlay.js';\n${code}`
       }
 
@@ -114,6 +129,7 @@ export function VueMcp(options: VueMcpOptions = {}): Plugin {
       if (options.appendTo)
         return
 
+      console.log('[VueMcp] Transforming index.html, injecting overlay script')
       return {
         html,
         tags: [

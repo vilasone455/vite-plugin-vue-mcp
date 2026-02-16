@@ -10,6 +10,7 @@ export function createMcpServerDefault(
   vite: ViteDevServer,
   ctx: VueMcpContext,
 ): McpServer {
+  console.log('[McpServer] Creating MCP server...')
   const server = new McpServer(
     {
       name: 'vite',
@@ -17,6 +18,7 @@ export function createMcpServerDefault(
       ...options.mcpServerInfo,
     },
   )
+  console.log('[McpServer] MCP server instance created')
 
   server.tool(
     'get-component-tree',
@@ -24,9 +26,12 @@ export function createMcpServerDefault(
     {
     },
     async () => {
+      console.log('[McpServer] Tool called: get-component-tree')
       return new Promise((resolve) => {
         const eventName = nanoid()
+        console.log('[McpServer] get-component-tree event:', eventName)
         ctx.hooks.hookOnce(eventName, (res) => {
+          console.log('[McpServer] get-component-tree response received')
           resolve({
             content: [{
               type: 'text',
@@ -46,9 +51,12 @@ export function createMcpServerDefault(
       componentName: z.string(),
     },
     async ({ componentName }) => {
+      console.log('[McpServer] Tool called: get-component-state, component:', componentName)
       return new Promise((resolve) => {
         const eventName = nanoid()
+        console.log('[McpServer] get-component-state event:', eventName)
         ctx.hooks.hookOnce(eventName, (res) => {
+          console.log('[McpServer] get-component-state response received')
           resolve({
             content: [{
               type: 'text',
@@ -71,8 +79,10 @@ export function createMcpServerDefault(
       valueType: z.enum(['string', 'number', 'boolean', 'object', 'array']),
     },
     async ({ componentName, path, value, valueType }) => {
+      console.log('[McpServer] Tool called: edit-component-state, component:', componentName, 'path:', path, 'value:', value, 'type:', valueType)
       return new Promise((resolve) => {
         ctx.rpcServer.editComponentState({ componentName, path, value, valueType })
+        console.log('[McpServer] edit-component-state executed')
         resolve({
           content: [{
             type: 'text',
@@ -90,8 +100,10 @@ export function createMcpServerDefault(
       componentName: z.string(),
     },
     async ({ componentName }) => {
+      console.log('[McpServer] Tool called: highlight-component, component:', componentName)
       return new Promise((resolve) => {
         ctx.rpcServer.highlightComponent({ componentName })
+        console.log('[McpServer] highlight-component executed')
         resolve({
           content: [{
             type: 'text',
@@ -108,9 +120,12 @@ export function createMcpServerDefault(
     {
     },
     async () => {
+      console.log('[McpServer] Tool called: get-router-info')
       return new Promise((resolve) => {
         const eventName = nanoid()
+        console.log('[McpServer] get-router-info event:', eventName)
         ctx.hooks.hookOnce(eventName, (res) => {
+          console.log('[McpServer] get-router-info response received')
           resolve({
             content: [{
               type: 'text',
@@ -130,9 +145,12 @@ export function createMcpServerDefault(
       storeName: z.string(),
     },
     async ({ storeName }) => {
+      console.log('[McpServer] Tool called: get-pinia-state, store:', storeName)
       return new Promise((resolve) => {
         const eventName = nanoid()
+        console.log('[McpServer] get-pinia-state event:', eventName)
         ctx.hooks.hookOnce(eventName, (res) => {
+          console.log('[McpServer] get-pinia-state response received')
           resolve({
             content: [{
               type: 'text',
@@ -151,9 +169,12 @@ export function createMcpServerDefault(
     {
     },
     async () => {
+      console.log('[McpServer] Tool called: get-pinia-tree')
       return new Promise((resolve) => {
         const eventName = nanoid()
+        console.log('[McpServer] get-pinia-tree event:', eventName)
         ctx.hooks.hookOnce(eventName, (res) => {
+          console.log('[McpServer] get-pinia-tree response received')
           resolve({
             content: [{
               type: 'text',
@@ -166,5 +187,6 @@ export function createMcpServerDefault(
     },
   )
 
+  console.log('[McpServer] All tools registered, returning server')
   return server
 }
